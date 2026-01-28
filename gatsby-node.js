@@ -1,5 +1,22 @@
 const path = require("path")
 
+// Define explicit schema for optional frontmatter fields
+exports.createSchemaCustomization = ({ actions }) => {
+  const { createTypes } = actions
+  createTypes(`
+    type MdxFrontmatter {
+      title: String!
+      slug: String!
+      description: String!
+      category: String!
+      publishDate: Date! @dateformat
+      author: String!
+      htmlFile: String!
+      image: String
+    }
+  `)
+}
+
 exports.createPages = async ({ graphql, actions, reporter }) => {
   const { createPage } = actions
 

@@ -246,18 +246,41 @@ export default function PostTemplate({ data, children }) {
   )
 }
 
-export const Head = ({ data }) => (
-  <>
-    <title>{data.mdx.frontmatter.title} | Colorado Sun Extras</title>
-    <meta name="description" content={data.mdx.frontmatter.description} />
-  </>
-)
+export const Head = ({ data }) => {
+  const { title, description, image, slug } = data.mdx.frontmatter
+  const { siteUrl, defaultImage } = data.site.siteMetadata
+  const shareImage = image || defaultImage
+  const fullImageUrl = shareImage.startsWith('http') ? shareImage : `${siteUrl}${shareImage}`
+  const pageUrl = `${siteUrl}/view/${slug}/`
+
+  return (
+    <>
+      <title>{title} | Colorado Sun Extras</title>
+      <meta name="description" content={description} />
+      
+      {/* Open Graph */}
+      <meta property="og:type" content="article" />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={fullImageUrl} />
+      <meta property="og:url" content={pageUrl} />
+      <meta property="og:site_name" content="Colorado Sun Extras" />
+      
+      {/* Twitter Card */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={fullImageUrl} />
+    </>
+  )
+}
 
 export const query = graphql`
   query PostBySlug($slug: String!) {
     site {
       siteMetadata {
         siteUrl
+        defaultImage
       }
     }
     mdx(frontmatter: { slug: { eq: $slug } }) {
@@ -269,6 +292,7 @@ export const query = graphql`
         publishDate
         author
         htmlFile
+        image
       }
     }
   }

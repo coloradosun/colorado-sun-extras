@@ -52,15 +52,42 @@ export default function Home({ data }) {
   )
 }
 
-export const Head = () => (
-  <>
-    <title>Colorado Sun Extras</title>
-    <meta name="description" content="Interactive extras from The Colorado Sun" />
-  </>
-)
+export const Head = ({ data }) => {
+  const { siteUrl, defaultImage, title, description } = data.site.siteMetadata
+  const fullImageUrl = `${siteUrl}${defaultImage}`
+
+  return (
+    <>
+      <title>{title}</title>
+      <meta name="description" content={description} />
+      
+      {/* Open Graph */}
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:image" content={fullImageUrl} />
+      <meta property="og:url" content={siteUrl} />
+      <meta property="og:site_name" content={title} />
+      
+      {/* Twitter Card */}
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+      <meta name="twitter:image" content={fullImageUrl} />
+    </>
+  )
+}
 
 export const query = graphql`
   query {
+    site {
+      siteMetadata {
+        title
+        description
+        siteUrl
+        defaultImage
+      }
+    }
     allMdx(sort: { frontmatter: { publishDate: DESC } }) {
       nodes {
         id

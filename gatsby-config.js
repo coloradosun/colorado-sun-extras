@@ -3,6 +3,7 @@ module.exports = {
     title: "Colorado Sun Extras",
     description: "Interactive content viewer for The Colorado Sun",
     siteUrl: "https://extras.coloradosun.com",
+    defaultImage: "/images/default-share.png",
   },
   trailingSlash: "always",
   plugins: [
