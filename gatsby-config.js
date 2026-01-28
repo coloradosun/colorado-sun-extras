@@ -3,6 +3,7 @@ module.exports = {
     title: "Colorado Sun Extras",
     description: "Interactive content viewer for The Colorado Sun",
   },
+  trailingSlash: "always",
   plugins: [
     {
       resolve: `gatsby-plugin-google-fonts`,
