@@ -6,10 +6,10 @@
   "scripts": {
     "prebuild": "cp -r src/html-files/* public/html-files/ 2>/dev/null || true",
     "develop": "gatsby develop",
-    "build": "gatsby build --prefix-paths",
+    "build": "gatsby build",
     "serve": "gatsby serve",
     "clean": "gatsby clean",
-    "deploy": "gatsby build --prefix-paths && git push origin main"
+    "deploy": "gatsby build && git push origin main"
   },
   "keywords": ["gatsby", "colorado", "sun", "extras", "interactive"],
   "author": "The Colorado Sun",

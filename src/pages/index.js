@@ -12,7 +12,7 @@ export default function Home({ data }) {
     try {
       setLoading(true)
       setSelectedFile(filename)
-      const response = await fetch(`/colorado-sun-extras/html-files/${filename}`)
+      const response = await fetch(`/html-files/${filename}`)
       const content = await response.text()
       setSelectedContent(content)
       setLoading(false)
