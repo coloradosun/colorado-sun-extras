@@ -66,15 +66,14 @@ const mdxComponents = {}
 
 export default function PostTemplate({ data, children }) {
   const { frontmatter } = data.mdx
+  const { siteUrl } = data.site.siteMetadata
   const { title, description, htmlFile, category, publishDate, author, slug } = frontmatter
   const [isMetadataOpen, setIsMetadataOpen] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [copied, setCopied] = useState(false)
 
-  // Generate share URL (will be defined on client)
-  const shareUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/share/${slug}`
-    : `/share/${slug}`
+  // Generate share URL using siteUrl from config
+  const shareUrl = `${siteUrl}/share/${slug}/`
 
   const handleCopy = async () => {
     try {
@@ -256,6 +255,11 @@ export const Head = ({ data }) => (
 
 export const query = graphql`
   query PostBySlug($slug: String!) {
+    site {
+      siteMetadata {
+        siteUrl
+      }
+    }
     mdx(frontmatter: { slug: { eq: $slug } }) {
       frontmatter {
         title

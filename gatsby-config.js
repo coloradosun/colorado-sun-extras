@@ -2,6 +2,7 @@ module.exports = {
   siteMetadata: {
     title: "Colorado Sun Extras",
     description: "Interactive content viewer for The Colorado Sun",
+    siteUrl: "https://extras.coloradosun.com",
   },
   trailingSlash: "always",
   plugins: [
