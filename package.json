@@ -1,0 +1,27 @@
+{
+  "name": "colorado-sun-extras",
+  "version": "1.0.0",
+  "description": "Interactive extras and data visualizations from The Colorado Sun",
+  "main": "index.js",
+  "scripts": {
+    "prebuild": "cp -r src/html-files/* public/html-files/ 2>/dev/null || true",
+    "develop": "gatsby develop",
+    "build": "gatsby build --prefix-paths",
+    "serve": "gatsby serve",
+    "clean": "gatsby clean",
+    "deploy": "gatsby build --prefix-paths && git push origin main"
+  },
+  "keywords": ["gatsby", "colorado", "sun", "extras", "interactive"],
+  "author": "The Colorado Sun",
+  "license": "MIT",
+  "dependencies": {
+    "gatsby": "^5.12.0",
+    "gatsby-plugin-react-helmet": "^6.12.0",
+    "gatsby-source-filesystem": "^5.12.0",
+    "gatsby-transformer-json": "^5.12.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-helmet": "^6.1.0"
+  },
+  "devDependencies": {}
+}
