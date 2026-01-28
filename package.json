@@ -1,27 +1,32 @@
 {
   "name": "colorado-sun-extras",
   "version": "1.0.0",
-  "description": "Interactive extras and data visualizations from The Colorado Sun",
-  "main": "index.js",
+  "description": "Interactive extras from The Colorado Sun",
   "scripts": {
-    "prebuild": "cp -r src/html-files/* public/html-files/ 2>/dev/null || true",
     "develop": "gatsby develop",
     "build": "gatsby build",
     "serve": "gatsby serve",
-    "clean": "gatsby clean",
-    "deploy": "gatsby build && git push origin main"
+    "clean": "gatsby clean"
   },
-  "keywords": ["gatsby", "colorado", "sun", "extras", "interactive"],
-  "author": "The Colorado Sun",
-  "license": "MIT",
   "dependencies": {
-    "gatsby": "^5.12.0",
-    "gatsby-plugin-react-helmet": "^6.12.0",
-    "gatsby-source-filesystem": "^5.12.0",
-    "gatsby-transformer-json": "^5.12.0",
+    "@mdx-js/mdx": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
+    "@tailwindcss/typography": "^0.5.19",
+    "ajv": "^8.17.1",
+    "express": "^5.2.1",
+    "gatsby": "^5.16.0",
+    "gatsby-plugin-google-fonts": "^1.0.1",
+    "gatsby-plugin-mdx": "^5.16.0",
+    "gatsby-source-filesystem": "^5.16.0",
+    "gatsby-transformer-json": "^5.16.0",
     "react": "^18.2.0",
+    "react-aria-components": "^1.14.0",
     "react-dom": "^18.2.0",
-    "react-helmet": "^6.1.0"
+    "tailwindcss-react-aria-components": "^2.0.1"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "autoprefixer": "^10.4.18",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.1"
+  }
 }

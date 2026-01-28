@@ -1,26 +1,31 @@
 module.exports = {
   siteMetadata: {
-    title: "The Colorado Sun Extras",
-    description: "Interactive extras and data visualizations from The Colorado Sun",
-    siteUrl: "https://extras.coloradosun.com",
+    title: "Colorado Sun Extras",
+    description: "Interactive content viewer for The Colorado Sun",
   },
-  pathPrefix: "",
   plugins: [
-    `gatsby-plugin-react-helmet`,
     {
-      resolve: `gatsby-source-filesystem`,
+      resolve: `gatsby-plugin-google-fonts`,
       options: {
-        name: `html-files`,
-        path: `${__dirname}/src/html-files`,
-      },
+        fonts: [
+          `Libre Franklin\:400,500,600,700`,
+          `Martel\:400,700`
+        ],
+        display: 'swap'
+      }
     },
     {
       resolve: `gatsby-source-filesystem`,
       options: {
-        name: `data`,
-        path: `${__dirname}/src/data`,
+        name: `content`,
+        path: `${__dirname}/src/content`,
       },
     },
-    `gatsby-transformer-json`,
+    {
+      resolve: `gatsby-plugin-mdx`,
+      options: {
+        extensions: [`.mdx`, `.md`],
+      },
+    },
   ],
 }

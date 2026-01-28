@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* Use sans-serif (Libre Franklin) for UI by default */
+  body {
+    @apply font-sans text-sun-dark;
+  }
+  
+  /* Headings use sans-serif too */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-sans font-semibold;
+  }
+}
+
+/* Post content (MDX body text) uses serif (Martel) */
+.post-content {
+  @apply font-serif;
+}
+
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6 {
+  @apply font-serif;
+}
