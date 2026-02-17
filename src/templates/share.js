@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Link, graphql } from "gatsby"
 import { MDXProvider } from "@mdx-js/react"
 import { Button } from "react-aria-components"
@@ -49,10 +49,32 @@ const SidebarIcon = ({ isOpen }) => (
 // Custom components for MDX
 const mdxComponents = {}
 
-export default function ShareTemplate({ data, children }) {
+export default function ShareTemplate({ data, children, location }) {
   const { frontmatter } = data.mdx
   const { title, description, htmlFile, category, publishDate } = frontmatter
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isEmbedMode, setIsEmbedMode] = useState(false)
+
+  // Check for embed format on client-side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      setIsEmbedMode(params.get('format') === 'embed')
+    }
+  }, [])
+
+  // Embed mode: render only the HTML content, full viewport
+  if (isEmbedMode) {
+    return (
+      <div className="w-screen h-screen overflow-hidden">
+        <ProcessedHtmlEmbed 
+          file={htmlFile} 
+          publishDate={publishDate} 
+          title={title} 
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="h-screen flex flex-col bg-white">

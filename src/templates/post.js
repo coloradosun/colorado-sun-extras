@@ -71,13 +71,33 @@ export default function PostTemplate({ data, children }) {
   const [isMetadataOpen, setIsMetadataOpen] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [shareFormat, setShareFormat] = useState('link')
+  const [aspectRatio, setAspectRatio] = useState(1)
 
-  // Generate share URL using siteUrl from config
+  // Generate share URLs using siteUrl from config
   const shareUrl = `${siteUrl}/share/${slug}/`
+  const embedUrl = `${siteUrl}/share/${slug}/?format=embed`
+  
+  // Get the current URL based on format
+  const currentUrl = shareFormat === 'embed' ? embedUrl : shareUrl
 
-  const handleCopy = async () => {
+  // Generate embed code with aspect ratio
+  // Using padding-bottom technique for responsive aspect ratio
+  const generateEmbedCode = () => {
+    const paddingPercent = (aspectRatio * 100).toFixed(0)
+    return `<div style="position:relative;width:100%;padding-bottom:${paddingPercent}%;overflow:hidden;">
+  <iframe 
+    src="${embedUrl}" 
+    style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
+    title="${title}"
+    loading="lazy"
+  ></iframe>
+</div>`
+  }
+
+  const handleCopy = async (textToCopy) => {
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      await navigator.clipboard.writeText(textToCopy || currentUrl)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
@@ -157,17 +177,28 @@ export default function PostTemplate({ data, children }) {
 
             {/* Share URL */}
             <div className="mb-6">
-              <label className="block text-xs text-gray-500 mb-1">Share URL</label>
+              <div className="flex items-center gap-2 mb-1">
+                <label htmlFor="share-format" className="text-xs text-gray-500">Share</label>
+                <select
+                  id="share-format"
+                  value={shareFormat}
+                  onChange={(e) => setShareFormat(e.target.value)}
+                  className="text-xs bg-white border border-gray-200 rounded px-2 py-0.5"
+                >
+                  <option value="link">Link</option>
+                  <option value="embed">Embed</option>
+                </select>
+              </div>
               <div className="flex gap-2">
                 <input
                   type="text"
                   readOnly
-                  value={shareUrl}
+                  value={currentUrl}
                   className="flex-1 px-2 py-1.5 text-xs bg-white border border-gray-200 rounded font-mono text-gray-600 truncate"
                   onClick={(e) => e.target.select()}
                 />
                 <Button
-                  onPress={handleCopy}
+                  onPress={() => handleCopy()}
                   className={`px-2 py-1.5 text-sm rounded transition flex items-center gap-1 ${
                     copied 
                       ? 'bg-green-600 text-white' 
@@ -178,6 +209,65 @@ export default function PostTemplate({ data, children }) {
                   <span className="text-xs">{copied ? 'Copied!' : 'Copy'}</span>
                 </Button>
               </div>
+
+              {/* Embed Code Section - visible when embed format selected */}
+              {shareFormat === 'embed' && (
+                <div className="mt-3 p-3 bg-gray-100 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="embed-code" className="text-xs text-gray-600 font-medium">Embed Code</label>
+                    <Button
+                      onPress={() => handleCopy(generateEmbedCode())}
+                      className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded transition"
+                    >
+                      Copy Code
+                    </Button>
+                  </div>
+                  
+                  {/* Aspect Ratio Control */}
+                  <div className="mb-2">
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                      <label htmlFor="aspect-ratio">Aspect Ratio</label>
+                      <span className="font-mono">{aspectRatio.toFixed(2)}</span>
+                    </div>
+                    <input
+                      id="aspect-ratio"
+                      type="range"
+                      min="0.25"
+                      max="2"
+                      step="0.05"
+                      value={aspectRatio}
+                      onChange={(e) => setAspectRatio(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+                      <span>Landscape</span>
+                      <span>Square</span>
+                      <span>Portrait</span>
+                    </div>
+                  </div>
+                  
+                  {/* Preview of aspect ratio */}
+                  <div className="mb-2">
+                    <div 
+                      className="border border-gray-300 bg-white rounded overflow-hidden mx-auto"
+                      style={{ 
+                        width: aspectRatio > 1 ? `${100 / aspectRatio}%` : '100%',
+                        paddingBottom: aspectRatio > 1 ? `100%` : `${aspectRatio * 100}%`,
+                        maxWidth: '100%'
+                      }}
+                    />
+                    <p className="text-xs text-gray-400 text-center mt-1">Preview</p>
+                  </div>
+                  
+                  <textarea
+                    id="embed-code"
+                    readOnly
+                    value={generateEmbedCode()}
+                    onClick={(e) => e.target.select()}
+                    className="w-full h-24 px-2 py-1.5 text-xs bg-white border border-gray-200 rounded font-mono text-gray-600 resize-none"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Collapsible Metadata */}
