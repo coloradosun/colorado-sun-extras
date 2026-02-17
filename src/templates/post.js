@@ -229,20 +229,32 @@ export default function PostTemplate({ data, children }) {
                       <label htmlFor="aspect-ratio">Aspect Ratio</label>
                       <span className="font-mono">{aspectRatio.toFixed(2)}</span>
                     </div>
-                    <input
-                      id="aspect-ratio"
-                      type="range"
-                      min="0.25"
-                      max="2"
-                      step="0.05"
-                      value={aspectRatio}
-                      onChange={(e) => setAspectRatio(parseFloat(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="flex justify-between text-xs text-gray-400 mt-0.5">
-                      <span>Landscape</span>
-                      <span>Square</span>
-                      <span>Portrait</span>
+                    <div className="relative">
+                      {/* Vertical line at 1.0 (square) position: (1-0.25)/(2-0.25) = 42.86% */}
+                      <div 
+                        className="absolute top-0 bottom-0 w-px bg-gray-400 opacity-50 pointer-events-none"
+                        style={{ left: '42.86%' }}
+                      />
+                      <input
+                        id="aspect-ratio"
+                        type="range"
+                        min="0.25"
+                        max="2"
+                        step="0.05"
+                        value={aspectRatio}
+                        onChange={(e) => {
+                          let val = parseFloat(e.target.value)
+                          // Snap to 1.0 when within ±0.08
+                          if (Math.abs(val - 1) < 0.08) val = 1
+                          setAspectRatio(val)
+                        }}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer relative z-10"
+                      />
+                    </div>
+                    <div className="relative text-xs text-gray-400 mt-0.5 h-4">
+                      <span className="absolute left-0">Landscape</span>
+                      <span className="absolute" style={{ left: '42.86%', transform: 'translateX(-50%)' }}>Square</span>
+                      <span className="absolute right-0">Portrait</span>
                     </div>
                   </div>
                   

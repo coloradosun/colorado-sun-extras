@@ -140,8 +140,8 @@
     const map = L.map('map', {
         center: CONFIG.map.center,
         zoom: CONFIG.map.zoom,
-        minZoom: CONFIG.map.zoom,
-        maxZoom: CONFIG.map.zoom,
+        minZoom: CONFIG.map.minZoom,
+        maxZoom: CONFIG.map.maxZoom,
         zoomControl: false,
         dragging: false,
         touchZoom: false,
@@ -150,6 +150,19 @@
         boxZoom: false,
         keyboard: false,
         attributionControl: false,
+    });
+
+    // Fit to Colorado bounds with padding, responsive to any viewport size
+    const coloradoBounds = L.latLngBounds(
+        [CONFIG.border.south, CONFIG.border.west],
+        [CONFIG.border.north, CONFIG.border.east]
+    );
+    map.fitBounds(coloradoBounds, { padding: [20, 20] });
+
+    // Re-fit bounds on window resize for responsive embeds
+    window.addEventListener('resize', () => {
+        map.invalidateSize();
+        map.fitBounds(coloradoBounds, { padding: [20, 20] });
     });
 
     L.tileLayer(CONFIG.tiles.url, {
