@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorado — Watercolor Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Martel:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        #map { width: 100%; height: 100%; }
+        .city-label {
+            white-space: nowrap;
+        }
+        .leaflet-control-attribution { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+    // ============================================================
+    //  CONFIGURATION — All tunables in one place
+    // ============================================================
+    const CONFIG = {
+
+        // -- Map defaults --
+        map: {
+            center: [39.0, -105.55],
+            zoom: 7,
+            minZoom: 6,
+            maxZoom: 12,
+        },
+
+        // -- Tile layer (Stadia Watercolor) --
+        tiles: {
+            url: 'https://tiles.stadiamaps.com/tiles/stamen_watercolor/{z}/{x}/{y}.jpg?api_key=ac90b6e9-8eef-490e-8c0d-4005455f88a9',
+            attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> · <a href="https://stamen.com/">Stamen Design</a>',
+            maxZoom: 18,
+        },
+
+        // -- State border --
+        border: {
+            color: '#5c3a1e',
+            weight: 8,
+            opacity: 0.85,
+            fillColor: 'transparent',
+            fillOpacity: 0,
+            dashArray: null,           // e.g. '8 4' for dashed
+            // Colorado bounding box (approximate rectangular border)
+            north: 41.0025,
+            south: 36.9925,
+            west: -109.0500,
+            east: -102.0400,
+        },
+
+        // -- Outside-state overlay (fades area beyond borders) --
+        outsideOverlay: {
+            color: 'rgba(255, 255, 255, 0.65)',  // white semi-transparent
+            // Outer bounds (large rectangle well beyond viewport)
+            outerPadding: 10,                     // degrees beyond state border
+        },
+
+        // -- Base map blue tint (cool wash over the whole state) --
+        blueTint: {
+            color: 'rgba(54, 115, 255, 0.25)',   // muted steel-blue
+        },
+
+        // -- City markers & labels --
+        cities: {
+            font: "'Martel', serif",
+            fontWeight: '700',
+            fontSize: '12px',
+            fontColor: '#2c1810',
+            textShadow: '0 0 5px rgba(255,255,255,0.95), 0 0 2px rgba(255,255,255,0.8), 1px 1px 2px rgba(255,255,255,0.6)',
+            markerRadius: 5,
+            markerColor: '#8b4513',
+            markerFillColor: '#d4956a',
+            markerFillOpacity: 0.9,
+            markerWeight: 2,
+            // Default label offset from marker center (px)
+            // Positive X = right, negative Y = above
+            labelOffsetX: 8,
+            labelOffsetY: 18,
+        },
+
+        // -- City data: [name, lat, lng, offsetX (optional), offsetY (optional)] --
+        // Custom offsets override the top-right defaults to handle overlap
+        cityData: [
+            ['Denver',            39.7392, -104.9903, -45, 25],
+            ['Aurora',            39.7294, -104.8319,   6,  -6],  // below marker (close to Denver)
+            ['Fort Collins',      40.5853, -105.0844],
+            ['Greeley',           40.4233, -104.7091],
+            ['Pueblo',            38.2544, -104.6091],
+            ['Colorado Springs',  38.8339, -104.8214],
+            ['Grand Junction',    39.0639, -108.5506],
+            ['Durango',           37.2753, -107.8801],
+            ['Sterling',          40.6255, -103.2080],
+            ['Fort Morgan',       40.2503, -103.8000],
+            ['Trinidad',          37.1694, -104.5006],
+            ['Steamboat Springs', 40.4850, -106.8317],
+            ['Burlington',        39.3058, -102.2694, -75],
+            ['Yuma',              40.1222, -102.7131],
+            ['Lamar',             38.0872, -102.6207, -50],
+        ],
+
+        // -- Sunrise gradient overlay (NE quarter) --
+        sunrise: {
+            // The NE quadrant boundaries
+            north: 41.0025,
+            south: 36,           // midpoint latitude
+            west: -119.55,         // midpoint longitude
+            east: -102.0400,
+            // Gradient color stops (intensest at sun origin, fading outward)
+            colors: [
+                { offset: 0.0,  color: 'rgba(255, 94, 58, .01)' },   // warm red-orange
+                { offset: 0.10, color: 'rgba(255, 149, 0, 0.5)' },    // orange
+                { offset: 0.50, color: 'rgba(255, 204, 0, 0.2)' },    // golden yellow
+                { offset: 0.65, color: 'rgba(255, 230, 120, 0.05)' },  // pale gold
+                { offset: 1.0,  color: 'rgba(255, 255, 200, 0.00)' },  // near-transparent
+            ],
+            // Glow effect
+            glowColor: 'rgba(255, 160, 50, .8)',
+            glowRadius: 18,        // px blur for the inner glow
+            // Sun origin position (relative to overlay bounds: 0-1)
+            sunX: .965,             // 1.0 = right edge (east)
+            sunY: -.125,             // 0.0 = top edge (north) — NE corner
+            sunRadius: 0.65,       // fraction of overlay diagonal
+        },
+    };
+
+
+    // ============================================================
+    //  MAP SETUP
+    // ============================================================
+    const map = L.map('map', {
+        center: CONFIG.map.center,
+        zoom: CONFIG.map.zoom,
+        minZoom: CONFIG.map.zoom,
+        maxZoom: CONFIG.map.zoom,
+        zoomControl: false,
+        dragging: false,
+        touchZoom: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
+        attributionControl: false,
+    });
+
+    L.tileLayer(CONFIG.tiles.url, {
+        attribution: CONFIG.tiles.attribution,
+        maxZoom: CONFIG.tiles.maxZoom,
+    }).addTo(map);
+
+
+    // ============================================================
+    //  STATE BORDER (rectangular approximation)
+    // ============================================================
+    const { north, south, west, east } = CONFIG.border;
+    const borderCoords = [
+        [north, west],
+        [north, east],
+        [south, east],
+        [south, west],
+    ];
+
+    L.polygon(borderCoords, {
+        color: CONFIG.border.color,
+        weight: CONFIG.border.weight,
+        opacity: CONFIG.border.opacity,
+        fillColor: CONFIG.border.fillColor,
+        fillOpacity: CONFIG.border.fillOpacity,
+        dashArray: CONFIG.border.dashArray,
+    }).addTo(map);
+
+
+    // ============================================================
+    //  OUTSIDE-STATE FADE OVERLAY (polygon with hole)
+    // ============================================================
+    const pad = CONFIG.outsideOverlay.outerPadding;
+    const outerRing = [
+        [north + pad, west - pad],
+        [north + pad, east + pad],
+        [south - pad, east + pad],
+        [south - pad, west - pad],
+    ];
+    // Inner ring (state border) — wound in reverse to create hole
+    const innerRing = [
+        [north, west],
+        [south, west],
+        [south, east],
+        [north, east],
+    ];
+
+    L.polygon([outerRing, innerRing], {
+        stroke: false,
+        fillColor: CONFIG.outsideOverlay.color,
+        fillOpacity: 1,            // opacity is baked into the RGBA color
+        interactive: false,
+    }).addTo(map);
+
+
+    // ============================================================
+    //  BLUE TINT OVERLAY (cool wash inside state borders)
+    // ============================================================
+    L.polygon(borderCoords, {
+        stroke: false,
+        fillColor: CONFIG.blueTint.color,
+        fillOpacity: 1,            // opacity is baked into the RGBA color
+        interactive: false,
+    }).addTo(map);
+
+
+    // ============================================================
+    //  CITY MARKERS + LABELS (with per-city offset overrides)
+    // ============================================================
+    const c = CONFIG.cities;
+
+    CONFIG.cityData.forEach((entry) => {
+        const [name, lat, lng, customOffX, customOffY] = entry;
+        const offX = customOffX !== undefined ? customOffX : c.labelOffsetX;
+        const offY = customOffY !== undefined ? customOffY : c.labelOffsetY;
+
+        // Circle marker — rendered in markerPane
+        L.circleMarker([lat, lng], {
+            radius: c.markerRadius,
+            color: c.markerColor,
+            fillColor: c.markerFillColor,
+            fillOpacity: c.markerFillOpacity,
+            weight: c.markerWeight,
+            pane: 'markerPane',
+        }).addTo(map);
+
+        // Text label via DivIcon — rendered in tooltipPane (above markers)
+        L.marker([lat, lng], {
+            icon: L.divIcon({
+                className: 'city-label',
+                html: `<span style="
+                    font-family: ${c.font};
+                    font-weight: ${c.fontWeight};
+                    font-size: ${c.fontSize};
+                    color: ${c.fontColor};
+                    text-shadow: ${c.textShadow};
+                ">${name}</span>`,
+                iconAnchor: [-offX, offY],
+            }),
+            interactive: false,
+            pane: 'tooltipPane',
+        }).addTo(map);
+    });
+
+
+    // ============================================================
+    //  SUNRISE GRADIENT OVERLAY (Canvas-based, NE quarter)
+    // ============================================================
+    const SunriseOverlay = L.Layer.extend({
+        onAdd(map) {
+            this._map = map;
+            this._canvas = L.DomUtil.create('canvas', 'sunrise-overlay');
+            this._canvas.style.position = 'absolute';
+            this._canvas.style.pointerEvents = 'none';
+            this._canvas.style.zIndex = '400';
+            map.getPanes().overlayPane.appendChild(this._canvas);
+            map.on('moveend zoomend resize', this._redraw, this);
+            this._redraw();
+        },
+
+        onRemove(map) {
+            L.DomUtil.remove(this._canvas);
+            map.off('moveend zoomend resize', this._redraw, this);
+        },
+
+        _redraw() {
+            const s = CONFIG.sunrise;
+            const map = this._map;
+            const size = map.getSize();
+
+            // Get pixel positions of NE quadrant corners
+            const topLeft = map.latLngToContainerPoint([s.north, s.west]);
+            const bottomRight = map.latLngToContainerPoint([s.south, s.east]);
+
+            // Canvas covers the full map
+            const origin = map.containerPointToLayerPoint([0, 0]);
+            L.DomUtil.setPosition(this._canvas, origin);
+            this._canvas.width = size.x;
+            this._canvas.height = size.y;
+
+            const ctx = this._canvas.getContext('2d');
+            ctx.clearRect(0, 0, size.x, size.y);
+
+            // Convert container coords to layer coords
+            const tlLayer = map.containerPointToLayerPoint(topLeft);
+            const brLayer = map.containerPointToLayerPoint(bottomRight);
+            const x = tlLayer.x - origin.x;
+            const y = tlLayer.y - origin.y;
+            const w = brLayer.x - tlLayer.x;
+            const h = brLayer.y - tlLayer.y;
+
+            if (w <= 0 || h <= 0) return;
+
+            // -- Radial sunrise glow from configured sun position --
+            const sunPxX = x + w * s.sunX;
+            const sunPxY = y + h * s.sunY;
+            const diagonal = Math.sqrt(w * w + h * h);
+            const glowR = diagonal * s.sunRadius;
+
+            const radial = ctx.createRadialGradient(sunPxX, sunPxY, 0, sunPxX, sunPxY, glowR);
+            s.colors.forEach(stop => {
+                radial.addColorStop(stop.offset, stop.color);
+            });
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(x, y, w, h);
+            ctx.clip();
+
+            // Fill radial gradient
+            ctx.fillStyle = radial;
+            ctx.fillRect(x, y, w, h);
+
+            // Inner glow bloom at sun origin
+            ctx.shadowColor = s.glowColor;
+            ctx.shadowBlur = s.glowRadius;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            ctx.globalCompositeOperation = 'screen';
+            ctx.fillStyle = s.glowColor;
+            ctx.beginPath();
+            ctx.arc(sunPxX, sunPxY, glowR * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        },
+    });
+
+    new SunriseOverlay().addTo(map);
+
+    </script>
+</body>
+</html>
