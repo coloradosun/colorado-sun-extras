@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState } from "react"
 import { Link, graphql } from "gatsby"
 import { MDXProvider } from "@mdx-js/react"
 import { Button } from "react-aria-components"
@@ -56,12 +56,12 @@ export default function ShareTemplate({ data, children, location }) {
   const [isEmbedMode, setIsEmbedMode] = useState(false)
 
   // Check for embed format on client-side
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      setIsEmbedMode(params.get('format') === 'embed')
-    }
-  }, [])
+  // Determine initial state synchronously if possible (from window if available)
+  const [isEmbedMode, setIsEmbedMode] = useState(
+    typeof window !== 'undefined' 
+      ? new URLSearchParams(window.location.search).get('format') === 'embed'
+      : false
+  )
 
   // Embed mode: render only the HTML content, full viewport
   if (isEmbedMode) {
@@ -185,6 +185,27 @@ export const Head = ({ data }) => {
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={fullImageUrl} />
+
+      {/* Inline script to prevent flash in embed mode - runs before React hydrates */}
+      <script dangerouslySetInnerHTML={{
+        __html: `
+          if (new URLSearchParams(window.location.search).get('format') === 'embed') {
+            document.documentElement.setAttribute('data-embed-mode', 'true');
+          }
+        `
+      }} />
+      
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          html[data-embed-mode="true"] header,
+          html[data-embed-mode="true"] aside {
+            display: none !important;
+          }
+          html[data-embed-mode="true"] main {
+            margin-left: 0 !important;
+          }
+        `
+      }} />
     </>
   )
 }
