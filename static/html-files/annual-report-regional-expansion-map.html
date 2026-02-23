@@ -74,7 +74,7 @@
         cities: {
             font: "'Martel', serif",
             fontWeight: '700',
-            fontSize: '12px',
+            baseFontSize: 12,        // base size for reference zoom (7)
             fontColor: '#2c1810',
             textShadow: '0 0 5px rgba(255,255,255,0.95), 0 0 2px rgba(255,255,255,0.8), 1px 1px 2px rgba(255,255,255,0.6)',
             markerRadius: 5,
@@ -82,10 +82,15 @@
             markerFillColor: '#d4956a',
             markerFillOpacity: 0.9,
             markerWeight: 2,
-            // Default label offset from marker center (px)
-            // Positive X = right, negative Y = above
+            // Default label offset from marker center (px) — base values, scaled by responsiveness
             labelOffsetX: 8,
             labelOffsetY: 18,
+            // Responsive thresholds (container width in px)
+            responsiveBreakpoints: {
+                // small: 480,   // < 480px: 0.6x scale
+                medium: 768,  // 480-768px: 0.8x scale
+                large: 1024,  // 768-1024px: 1.0x scale
+            },
         },
 
         // -- City data: [name, lat, lng, offsetX (optional), offsetY (optional)] --
@@ -93,18 +98,18 @@
         cityData: [
             ['Denver',            39.7392, -104.9903, -45, 25],
             ['Aurora',            39.7294, -104.8319,   6,  -6],  // below marker (close to Denver)
-            ['Fort Collins',      40.5853, -105.0844],
-            ['Greeley',           40.4233, -104.7091],
+            ['Fort Collins',      40.5853, -105.0844, -80, 20],
+            ['Greeley',           40.4233, -104.7091, 8, 20],
             ['Pueblo',            38.2544, -104.6091],
             ['Colorado Springs',  38.8339, -104.8214],
             ['Grand Junction',    39.0639, -108.5506],
             ['Durango',           37.2753, -107.8801],
             ['Sterling',          40.6255, -103.2080],
-            ['Fort Morgan',       40.2503, -103.8000],
+            ['Fort Morgan',       40.2503, -103.8000, 8, 20],
             ['Trinidad',          37.1694, -104.5006],
-            ['Steamboat Springs', 40.4850, -106.8317],
+            // ['Steamboat Springs', 40.4850, -106.8317],
             ['Burlington',        39.3058, -102.2694, -75],
-            ['Yuma',              40.1222, -102.7131],
+            ['Yuma',              40.1222, -102.7131, 5,0],
             ['Lamar',             38.0872, -102.6207, -50],
         ],
 
@@ -157,18 +162,36 @@
         [CONFIG.border.south, CONFIG.border.west],
         [CONFIG.border.north, CONFIG.border.east]
     );
-    map.fitBounds(coloradoBounds, { padding: [20, 20] });
+    map.fitBounds(coloradoBounds, { padding: [0, 0] });
 
     // Re-fit bounds on window resize for responsive embeds
     window.addEventListener('resize', () => {
         map.invalidateSize();
-        map.fitBounds(coloradoBounds, { padding: [20, 20] });
+        map.fitBounds(coloradoBounds, { padding: [0, 0] });
+        updateCityLabels();
     });
 
     L.tileLayer(CONFIG.tiles.url, {
         attribution: CONFIG.tiles.attribution,
         maxZoom: CONFIG.tiles.maxZoom,
     }).addTo(map);
+
+    // ============================================================
+    //  RESPONSIVE SCALE CALCULATION
+    // ============================================================
+    function getResponsiveScale() {
+        const containerWidth = map.getContainer().offsetWidth;
+        const breaks = CONFIG.cities.responsiveBreakpoints;
+        
+        if (containerWidth < breaks.small) {
+            return 0.6;
+        } else if (containerWidth < breaks.medium) {
+            return 0.8;
+        } else if (containerWidth < breaks.large) {
+            return 1.0;
+        }
+        return 1.2;  // large screens: slightly larger for comfort
+    }
 
 
     // ============================================================
@@ -230,42 +253,61 @@
 
 
     // ============================================================
-    //  CITY MARKERS + LABELS (with per-city offset overrides)
+    //  CITY MARKERS + LABELS (responsive to container size)
     // ============================================================
-    const c = CONFIG.cities;
+    // Store references for updating on resize
+    let cityMarkersLayer = L.featureGroup();
+    cityMarkersLayer.addTo(map);
 
-    CONFIG.cityData.forEach((entry) => {
-        const [name, lat, lng, customOffX, customOffY] = entry;
-        const offX = customOffX !== undefined ? customOffX : c.labelOffsetX;
-        const offY = customOffY !== undefined ? customOffY : c.labelOffsetY;
+    function updateCityLabels() {
+        const scale = getResponsiveScale();
+        const c = CONFIG.cities;
+        const fontSize = c.baseFontSize * scale;
 
-        // Circle marker — rendered in markerPane
-        L.circleMarker([lat, lng], {
-            radius: c.markerRadius,
-            color: c.markerColor,
-            fillColor: c.markerFillColor,
-            fillOpacity: c.markerFillOpacity,
-            weight: c.markerWeight,
-            pane: 'markerPane',
-        }).addTo(map);
+        // Remove existing layers
+        cityMarkersLayer.clearLayers();
 
-        // Text label via DivIcon — rendered in tooltipPane (above markers)
-        L.marker([lat, lng], {
-            icon: L.divIcon({
-                className: 'city-label',
-                html: `<span style="
-                    font-family: ${c.font};
-                    font-weight: ${c.fontWeight};
-                    font-size: ${c.fontSize};
-                    color: ${c.fontColor};
-                    text-shadow: ${c.textShadow};
-                ">${name}</span>`,
-                iconAnchor: [-offX, offY],
-            }),
-            interactive: false,
-            pane: 'tooltipPane',
-        }).addTo(map);
-    });
+        CONFIG.cityData.forEach((entry) => {
+            const [name, lat, lng, customOffX, customOffY] = entry;
+            const offX = customOffX !== undefined ? customOffX : c.labelOffsetX;
+            const offY = customOffY !== undefined ? customOffY : c.labelOffsetY;
+
+            // Scale the offsets
+            const scaledOffX = offX * scale;
+            const scaledOffY = offY * scale;
+
+            // Circle marker
+            L.circleMarker([lat, lng], {
+                radius: c.markerRadius * scale,
+                color: c.markerColor,
+                fillColor: c.markerFillColor,
+                fillOpacity: c.markerFillOpacity,
+                weight: c.markerWeight,
+                pane: 'markerPane',
+            }).addTo(cityMarkersLayer);
+
+            // Text label via DivIcon
+            L.marker([lat, lng], {
+                icon: L.divIcon({
+                    className: 'city-label',
+                    html: `<span style="
+                        font-family: ${c.font};
+                        font-weight: ${c.fontWeight};
+                        font-size: ${fontSize}px;
+                        color: ${c.fontColor};
+                        text-shadow: ${c.textShadow};
+                    ">${name}</span>`,
+                    iconAnchor: [-scaledOffX, scaledOffY],
+                }),
+                interactive: false,
+                pane: 'tooltipPane',
+            }).addTo(cityMarkersLayer);
+        });
+    }
+
+    // Initial render
+    updateCityLabels();
+    map.on('zoomend', updateCityLabels);
 
 
     // ============================================================
