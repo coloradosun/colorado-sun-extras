@@ -89,11 +89,40 @@
     html.embed-mode #chart-footer .logo img { height: 16px; }
   }
 </style>
+<style>
+  /* Responsive embed: 65% desktop, 125% mobile */
+  .swe-embed { position: relative; width: 100%; padding-bottom: 65%; overflow: hidden; }
+  .swe-embed iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+  @media (max-width: 600px) { .swe-embed { padding-bottom: 125% !important; } }
+</style>
+</style>
 <script>
   // Detect if loaded in an iframe and apply embed mode
   if (window.self !== window.top) {
     document.documentElement.classList.add('embed-mode');
   }
+  // Dynamically shrink and relocate chart labels for mobile embed
+  function isMobileEmbed() {
+    return document.documentElement.classList.contains('embed-mode') && window.matchMedia('(max-width: 600px)').matches;
+  }
+  function adjustAnnotationsForMobile() {
+    if (!window.CONFIG || !isMobileEmbed()) return;
+    // Shrink font and move labels for mobile
+    CONFIG.annotations.actual2026.fontScale = 90;
+    CONFIG.annotations.actual2026.labelX = 60;
+    CONFIG.annotations.actual2026.labelY = 13;
+    CONFIG.annotations.projMax.labelX = 320;
+    CONFIG.annotations.projMax.labelY = 13;
+    CONFIG.annotations.projMedian.labelX = 320;
+    CONFIG.annotations.projMedian.labelY = 10;
+    CONFIG.annotations.projMin.labelX = 320;
+    CONFIG.annotations.projMin.labelY = 7;
+    CONFIG.annotations.median9120.fontScale = 90;
+    CONFIG.annotations.median9120.labelY = 20;
+    CONFIG.annotations.medianPeak.labelY = 28;
+  }
+  window.addEventListener('DOMContentLoaded', adjustAnnotationsForMobile);
+  window.addEventListener('resize', adjustAnnotationsForMobile);
 </script>
 </head>
 <body>
