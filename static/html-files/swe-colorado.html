@@ -75,6 +75,19 @@
   html.embed-mode #chart-header .subtitle { margin-bottom: 4px; }
   html.embed-mode #chart-footer { padding: 8px 0 10px; margin-top: 4px; min-height: auto; }
   html.embed-mode #chart-footer .logo img { height: 22px; }
+  /* Mobile embed: maximize chart space */
+  @media (max-width: 600px) {
+    html.embed-mode body { padding: 8px 8px 0; }
+    html.embed-mode #chart-header { margin-bottom: 4px; }
+    html.embed-mode #chart-header h2 { font-size: 12px; }
+    html.embed-mode #chart-header .subtitle { font-size: 9px; margin-bottom: 2px; }
+    html.embed-mode #stat-cards { gap: 4px; margin-bottom: 2px; }
+    html.embed-mode .stat-card { padding: 2px 6px; font-size: 9px; }
+    html.embed-mode .stat-card .chip-value { font-size: 10px; }
+    html.embed-mode #chart-footer { padding: 4px 0 6px; margin-top: 2px; }
+    html.embed-mode #chart-footer .source { font-size: 8px; }
+    html.embed-mode #chart-footer .logo img { height: 16px; }
+  }
 </style>
 <script>
   // Detect if loaded in an iframe and apply embed mode
