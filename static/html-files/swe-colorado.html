@@ -58,7 +58,30 @@
       gap: 8px; min-height: auto; padding: 10px 0 12px;
     }
   }
+  /* Embed mode: fit everything within viewport */
+  html.embed-mode, html.embed-mode body {
+    height: 100%; overflow: hidden;
+  }
+  html.embed-mode body {
+    padding: 12px 12px 0;
+  }
+  html.embed-mode #container {
+    flex: 1 1 auto;
+    aspect-ratio: unset;
+    min-height: 0;
+  }
+  html.embed-mode #chart-header { margin-bottom: 6px; }
+  html.embed-mode #chart-header h2 { font-size: clamp(12px, 2.5vw, 16px); margin-bottom: 2px; }
+  html.embed-mode #chart-header .subtitle { margin-bottom: 4px; }
+  html.embed-mode #chart-footer { padding: 8px 0 10px; margin-top: 4px; min-height: auto; }
+  html.embed-mode #chart-footer .logo img { height: 22px; }
 </style>
+<script>
+  // Detect if loaded in an iframe and apply embed mode
+  if (window.self !== window.top) {
+    document.documentElement.classList.add('embed-mode');
+  }
+</script>
 </head>
 <body>
 
