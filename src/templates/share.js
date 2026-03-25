@@ -53,9 +53,7 @@ export default function ShareTemplate({ data, children, location }) {
   const { frontmatter } = data.mdx
   const { title, description, htmlFile, category, publishDate } = frontmatter
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [isEmbedMode, setIsEmbedMode] = useState(false)
 
-  // Check for embed format on client-side
   // Determine initial state synchronously if possible (from window if available)
   const [isEmbedMode, setIsEmbedMode] = useState(
     typeof window !== 'undefined' 
